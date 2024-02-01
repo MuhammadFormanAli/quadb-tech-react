@@ -3,9 +3,15 @@ import Loading from "./Loading";
 import { useQuery } from "react-query";
 import axios from "axios";
 import { Col, Row } from "react-bootstrap";
+import { useState } from "react";
+import BookModal from "./BookModal";
 
 const ShowDetails = () => {
   const { id } = useParams();
+  const [modalShow, setModalShow] = useState(false);
+  const [existingTickets, setExistingTickets] = useState([])
+
+  
 
   const { data: show = [], isLoading } = useQuery({
     queryKey: ["show"],
@@ -15,6 +21,27 @@ const ShowDetails = () => {
     },
   });
 
+  const handleModalShow = ()=> {
+
+    const existingData = JSON.parse(localStorage.getItem('bookedTickets')) || [];
+    // console.log(existingData)
+
+    // Check if the ticket already exists
+    const existingTicket = existingData.find(ticket => ticket.showId === show?.id);
+    console.log(existingTicket)
+
+    if (existingTicket) {
+      return alert('Ticket already booked!');
+    } else {
+      setModalShow(true)
+      setExistingTickets(existingData)
+    }
+
+    
+  }
+
+
+
   if (isLoading) {
     return <Loading />;
   }
@@ -22,19 +49,25 @@ const ShowDetails = () => {
   console.log(id, show);
   return (
     <div>
+
       <h1 className="text-center border-bottom">{show?.name}</h1>
       <Row xs={1} sm={2} lg={3} className="   mx-auto row-gap-3 p-2">
-        <Col xs={12}sm={4} md={4} lg={3}>
+        <Col xs={12} sm={4} md={4} lg={3}>
           <img
             className="img-fluid w-100 rounded-3 p-0"
             src={show?.image?.medium}
             alt=""
           />
         </Col>
-        <Col xs={12}sm={8} md={8} lg={5}>
+        <Col xs={12} sm={8} md={8} lg={5}>
           <div className="border bg-danger shadow-sm bg-opacity-10 rounded-3 p-2 h-100">
             <div dangerouslySetInnerHTML={{ __html: show?.summary }} />
-            <button className="btn btn-outline-primary fw-bold">Book A Ticket</button>
+            <button
+              onClick={handleModalShow}
+              className="btn btn-outline-primary fw-bold"
+            >
+              Book A Ticket
+            </button>
           </div>
         </Col>
         <Col xs={12} sm={12} md={12} lg={4}>
@@ -56,6 +89,9 @@ const ShowDetails = () => {
           </div>
         </Col>
       </Row>
+
+      
+      <BookModal existingTickets={existingTickets} showName ={show?.name} showId = {show?.id} show={modalShow} onHide={() => setModalShow(false)} />
     </div>
   );
 };
